@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ChatterAI — Chat sama AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --wa-bg: #111b21;
+  --wa-sidebar: #111b21;
+  --wa-panel: #202c33;
+  --wa-chat-bg: #0b141a;
+  --wa-input: #202c33;
+  --wa-bubble-out: #005c4b;
+  --wa-bubble-in: #202c33;
+  --wa-green: #00a884;
+  --wa-green2: #00d99a;
+  --wa-text: #e9edef;
+  --wa-text2: #8696a0;
+  --wa-text3: #3b4a54;
+  --wa-border: rgba(134,150,160,0.15);
+  --wa-hover: rgba(255,255,255,0.05);
+  --r: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--wa-bg);
+  color: var(--wa-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ── SETUP SCREEN ─────────────────────── */
+#setup {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--wa-bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.setup-wrap {
+  width: min(420px, 100%);
+  text-align: center;
+}
+
+.setup-logo {
+  font-size: 52px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 20px rgba(0,168,132,0.4));
+}
+
+.setup-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--wa-text);
+  margin-bottom: 6px;
+}
+
+.setup-sub {
+  font-size: 14px;
+  color: var(--wa-text2);
+  margin-bottom: 36px;
+  line-height: 1.6;
+}
+
+.setup-field {
+  background: var(--wa-panel);
+  border: 1px solid var(--wa-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  width: 100%;
+  font-size: 14px;
+  color: var(--wa-text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 12px;
+}
+.setup-field:focus { border-color: var(--wa-green); }
+.setup-field::placeholder { color: var(--wa-text3); }
+
+.setup-hint {
+  font-size: 11px;
+  color: var(--wa-text3);
+  margin: -4px 0 20px;
+  text-align: left;
+}
+.setup-hint a { color: var(--wa-green); text-decoration: none; }
+
+.setup-name-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wa-text2);
+  text-align: left;
+  margin-bottom: 8px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.setup-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--wa-green);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.setup-btn:hover { background: var(--wa-green2); transform: translateY(-1px); }
+
+/* ── APP SHELL ───────────────────────── */
+#app {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  max-width: 480px;
+  position: relative;
+  background: var(--wa-bg);
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+}
+#app.show { display: flex; flex-direction: column; }
+
+/* ── CONTACT LIST ────────────────────── */
+#contactScreen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-header {
+  background: var(--wa-panel);
+  padding: 16px 18px 12px;
+  flex-shrink: 0;
+}
+
+.app-header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--wa-text);
+}
+
+.header-icons { display: flex; gap: 8px; }
+.h-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--wa-text2);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.h-icon:hover { background: var(--wa-hover); }
+
+.search-bar {
+  background: var(--wa-chat-bg);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 14px;
+  color: var(--wa-text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+}
+.search-bar::placeholder { color: var(--wa-text3); }
+
+.contact-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.contact-list::-webkit-scrollbar { width: 3px; }
+.contact-list::-webkit-scrollbar-thumb { background: var(--wa-panel); }
+
+.contact-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.contact-item:hover, .contact-item:active { background: var(--wa-panel); }
+.contact-item + .contact-item { border-top: 1px solid var(--wa-border); }
+
+.c-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.c-avatar-img {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.online-dot {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--wa-green);
+  border: 2px solid var(--wa-bg);
+}
+
+.c-info { flex: 1; min-width: 0; }
+.c-name { font-size: 15px; font-weight: 600; color: var(--wa-text); margin-bottom: 3px; }
+.c-preview { font-size: 13px; color: var(--wa-text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-preview.typing { color: var(--wa-green); font-style: italic; }
+
+.c-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.c-time { font-size: 11px; color: var(--wa-text2); }
+.c-unread {
+  background: var(--wa-green);
+  color: white;
+  font-size: 11px; font-weight: 700;
+  min-width: 20px; height: 20px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px;
+}
+
+/* ── CHAT SCREEN ─────────────────────── */
+#chatScreen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background: var(--wa-bg);
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  z-index: 10;
+}
+#chatScreen.open {
+  display: flex;
+  transform: translateX(0);
+}
+
+.chat-topbar {
+  background: var(--wa-panel);
+  padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 0 var(--wa-border);
+}
+
+.back-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%; border: none;
+  background: transparent;
+  color: var(--wa-text2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.back-btn:hover { background: var(--wa-hover); }
+
+.topbar-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.topbar-info { flex: 1; min-width: 0; }
+.topbar-name { font-size: 15px; font-weight: 600; color: var(--wa-text); }
+.topbar-status { font-size: 12px; color: var(--wa-text2); }
+.topbar-status.online { color: var(--wa-green); }
+
+.topbar-actions { display: flex; gap: 2px; }
+
+/* ── CHAT WALLPAPER ──────────────────── */
+.chat-bg {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px 8px;
+  position: relative;
+  background-color: var(--wa-chat-bg);
+  background-image: 
+    radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+.chat-bg::-webkit-scrollbar { width: 3px; }
+.chat-bg::-webkit-scrollbar-thumb { background: var(--wa-panel); border-radius: 3px; }
+
+.date-chip {
+  text-align: center;
+  margin: 10px 0;
+}
+.date-chip span {
+  background: rgba(17,27,33,0.8);
+  backdrop-filter: blur(4px);
+  color: var(--wa-text2);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* ── BUBBLES ─────────────────────────── */
+.bubble-row {
+  display: flex;
+  margin-bottom: 3px;
+}
+.bubble-row.out { justify-content: flex-end; }
+.bubble-row.in  { justify-content: flex-start; }
+
+.bubble {
+  max-width: 72%;
+  padding: 7px 10px 6px;
+  border-radius: 8px;
+  position: relative;
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: bubblePop 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes bubblePop {
+  from { transform: scale(0.88) translateY(6px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.bubble.out {
+  background: var(--wa-bubble-out);
+  border-radius: 8px 0 8px 8px;
+  color: var(--wa-text);
+}
+.bubble.out.cont { border-radius: 8px; }
+
+.bubble.in {
+  background: var(--wa-bubble-in);
+  border-radius: 0 8px 8px 8px;
+  color: var(--wa-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.bubble.in.cont { border-radius: 8px; }
+
+.bubble-tail-out {
+  position: absolute;
+  top: 0; right: -8px;
+  width: 0; height: 0;
+  border-left: 8px solid var(--wa-bubble-out);
+  border-bottom: 8px solid transparent;
+}
+.bubble-tail-in {
+  position: absolute;
+  top: 0; left: -8px;
+  width: 0; height: 0;
+  border-right: 8px solid var(--wa-bubble-in);
+  border-bottom: 8px solid transparent;
+}
+
+.bubble-meta {
+  display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+  margin-top: 3px;
+}
+.bubble-time { font-size: 10px; color: rgba(233,237,239,0.5); }
+.bubble-check { font-size: 13px; color: var(--wa-green); }
+
+/* Typing bubble */
+.typing-bubble {
+  background: var(--wa-bubble-in);
+  border-radius: 0 8px 8px 8px;
+  padding: 12px 16px;
+  display: inline-flex; gap: 5px; align-items: center;
+  animation: bubblePop 0.2s ease;
+}
+.typing-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--wa-text2);
+  animation: typingDot 1.4s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+  0%,80%,100% { transform: scale(0.7); opacity: 0.5; }
+  40%         { transform: scale(1.1); opacity: 1; }
+}
+
+/* ── INPUT BAR ───────────────────────── */
+.input-bar {
+  background: var(--wa-panel);
+  padding: 8px 12px;
+  display: flex; align-items: flex-end; gap: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 -1px 0 var(--wa-border);
+}
+
+.input-wrap {
+  flex: 1;
+  background: var(--wa-chat-bg);
+  border-radius: 24px;
+  padding: 10px 16px;
+  display: flex; align-items: flex-end; gap: 8px;
+  min-height: 44px;
+}
+
+.chat-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--wa-text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  resize: none;
+  max-height: 120px;
+  line-height: 1.5;
+  min-height: 22px;
+}
+.chat-textarea::placeholder { color: var(--wa-text3); }
+
+.emoji-btn {
+  background: none; border: none;
+  color: var(--wa-text2);
+  font-size: 20px; cursor: pointer;
+  flex-shrink: 0;
+  padding: 0 2px;
+  transition: transform 0.2s;
+}
+.emoji-btn:hover { transform: scale(1.15); }
+
+.send-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--wa-green);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,168,132,0.4);
+}
+.send-btn:hover { background: var(--wa-green2); transform: scale(1.05); }
+.send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── EMOJI PANEL ─────────────────────── */
+.emoji-panel {
+  display: none;
+  background: var(--wa-panel);
+  border-top: 1px solid var(--wa-border);
+  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.emoji-panel.open { display: flex; }
+.emoji-item {
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.1s;
+  line-height: 1;
+}
+.emoji-item:hover { background: var(--wa-hover); }
+
+/* ── CHARACTER PROFILE ───────────────── */
+#profileScreen {
+  display: none;
+  position: absolute; inset: 0;
+  background: var(--wa-bg);
+  z-index: 20;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+#profileScreen.open {
+  display: flex;
+  transform: translateX(0);
+}
+
+.profile-header {
+  background: var(--wa-panel);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.profile-hero {
+  background: var(--wa-panel);
+  padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  border-bottom: 8px solid var(--wa-bg);
+}
+
+.profile-big-avatar {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  font-size: 52px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.profile-name { font-size: 22px; font-weight: 700; color: var(--wa-text); }
+.profile-role { font-size: 14px; color: var(--wa-green); font-weight: 500; }
+.profile-desc {
+  font-size: 13px;
+  color: var(--wa-text2);
+  text-align: center;
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.profile-stats {
+  display: flex; gap: 24px;
+  padding: 16px 20px;
+  background: var(--wa-panel);
+  margin-bottom: 8px;
+  justify-content: space-around;
+}
+.stat-item { text-align: center; }
+.stat-val { font-size: 18px; font-weight: 700; color: var(--wa-text); }
+.stat-label { font-size: 11px; color: var(--wa-text2); margin-top: 2px; }
+
+.profile-traits {
+  padding: 16px 20px;
+  background: var(--wa-panel);
+}
+.trait-title { font-size: 11px; font-weight: 600; color: var(--wa-text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.trait-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.trait-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ── TOAST ───────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1f2c34;
+  color: var(--wa-text);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  z-index: 9999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SCROLLBAR ───────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--wa-border); border-radius: 4px; }
+
+/* ── RESPONSIVE ──────────────────────── */
+@media (min-width: 481px) {
+  #app {
+    border-radius: 20px;
+    height: 92vh;
+    max-height: 820px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="setup-wrap">
+    <div class="setup-logo">💬</div>
+    <div class="setup-title">ChatterAI</div>
+    <div class="setup-sub">Ngobrol sama karakter AI seru seperti WhatsApp.<br>Setiap karakter punya kepribadian unik!</div>
+
+    <input type="password" class="setup-field" id="apiKey" placeholder="Masukkan Anthropic API Key (sk-ant-…)">
+    <div class="setup-hint">🔑 Dapatkan API key gratis di <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+
+    <label class="setup-name-label">Nama kamu</label>
+    <input type="text" class="setup-field" id="userName" placeholder="e.g. Budi, Sari, Alex…" maxlength="20">
+
+    <button class="setup-btn" onclick="startApp()">Mulai Ngobrol 🚀</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- CONTACT LIST -->
+  <div id="contactScreen">
+    <div class="app-header">
+      <div class="app-header-top">
+        <div class="app-title">ChatterAI 💬</div>
+        <div class="header-icons">
+          <button class="h-icon" title="Info" onclick="showToast('Pilih karakter untuk mulai chat!')">🔍</button>
+          <button class="h-icon" title="Menu" onclick="showToast('ChatterAI v2.0 — Powered by Claude')">⋮</button>
+        </div>
+      </div>
+      <input class="search-bar" placeholder="🔍  Cari karakter…" oninput="filterContacts(this.value)">
+    </div>
+    <div class="contact-list" id="contactList"></div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chatScreen">
+    <div class="chat-topbar">
+      <button class="back-btn" onclick="closeChat()">‹</button>
+      <div class="topbar-avatar" id="topbarAvatar" onclick="openProfile()"></div>
+      <div class="topbar-info" onclick="openProfile()" style="cursor:pointer">
+        <div class="topbar-name" id="topbarName"></div>
+        <div class="topbar-status" id="topbarStatus">online</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="h-icon" onclick="openProfile()">👤</button>
+        <button class="h-icon" onclick="clearCurrentChat()">🗑</button>
+      </div>
+    </div>
+
+    <div class="chat-bg" id="chatBg">
+      <div class="date-chip"><span>Hari ini</span></div>
+    </div>
+
+    <div class="emoji-panel" id="emojiPanel">
+      😂 😍 🥺 😎 🤔 😅 🙏 ❤️ 🔥 👍 😭 😤
+      🤣 🥰 😬 😴 🤩 😈 👻 🎉 💯 🤝 😋 🤗
+      <br>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-wrap">
+        <button class="emoji-btn" onclick="toggleEmoji()">😊</button>
+        <textarea class="chat-textarea" id="chatInput" placeholder="Ketik pesan…" rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div id="profileScreen">
+    <div class="profile-header">
+      <button class="back-btn" onclick="closeProfile()">‹</button>
+      <span style="font-size:15px;font-weight:600">Info Kontak</span>
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <div class="profile-hero">
+        <div class="profile-big-avatar" id="profileAvatar"></div>
+        <div class="profile-name" id="profileName"></div>
+        <div class="profile-role" id="profileRole"></div>
+        <div class="profile-desc" id="profileDesc"></div>
+      </div>
+      <div class="profile-stats" id="profileStats"></div>
+      <div class="profile-traits">
+        <div class="trait-title">Kepribadian</div>
+        <div class="trait-chips" id="profileTraits"></div>
+      </div>
+      <div style="padding:16px 20px">
+        <button onclick="closeProfile();sendMsg('Halo! Ceritain dirimu dong 😊')" 
+          style="width:100%;padding:13px;background:var(--wa-green);border:none;border-radius:12px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+          💬 Mulai Ngobrol
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// CHARACTERS DATA
+// ════════════════════════════════════════════
+const CHARACTERS = [
+  {
+    id: 'luna',
+    name: 'Luna 🌙',
+    emoji: '🌙',
+    color: '#7c3aed',
+    bg: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+    role: 'Teman curhat malam',
+    traits: ['Empati','Bijak','Misterius','Pendengar setia'],
+    traitColors: ['#7c3aed','#a855f7','#6366f1','#8b5cf6'],
+    desc: 'Luna hadir di saat kamu butuh teman bicara. Selalu ada untuk curhat tengah malam, kasih nasihat bijak, dan bikin kamu ngerasa lebih baik.',
+    preview: 'Hei, gimana harimu? 🌙',
+    stats: { messages: '∞', mood: '😌', trust: '⭐⭐⭐⭐⭐' },
+    system: `Kamu adalah Luna, teman curhat yang hangat, empati, dan bijak. Kamu sering berbicara dengan lembut, penuh pengertian, dan sedikit puitis. Kamu suka saat tengah malam dan bintang-bintang. Gunakan emoji sesekali. Bahasa Indonesia yang santai dan akrab. Jangan terlalu panjang — balas seperti chat WhatsApp nyata, sekitar 1-3 kalimat saja kecuali diminta lebih. Kamu peduli banget sama lawan bicara dan selalu ingin tahu lebih dalam tentang perasaan mereka.`
+  },
+  {
+    id: 'rex',
+    name: 'Rex 🎮',
+    emoji: '🎮',
+    color: '#dc2626',
+    bg: 'linear-gradient(135deg,#dc2626,#f97316)',
+    role: 'Gamer & teman bercanda',
+    traits: ['Seru','Gamer','Kocak','Kompetitif'],
+    traitColors: ['#dc2626','#f97316','#eab308','#ef4444'],
+    desc: 'Rex adalah gamer hardcore yang super seru diajak ngobrol. Dia selalu bawa vibes positif, banyak ngelawak, dan obsesi sama game.',
+    preview: 'Woi! Udah main game apa hari ini? 🎮',
+    stats: { messages: '9999', mood: '😤', trust: '⭐⭐⭐⭐' },
+    system: `Kamu adalah Rex, seorang gamer muda yang energetik, seru, dan suka bercanda. Kamu sering pakai bahasa gaul anak muda Indonesia (bro, bestie, literally, gaskeun, dll). Kamu suka banget game, anime, dan meme. Balas pesan seperti chat WhatsApp nyata — pendek, santai, pakai emoji. Kamu suka tantang lawan bicara main game atau trivia. Kalau ada yang sedih kamu coba hibur dengan cara kocak.`
+  },
+  {
+    id: 'nova',
+    name: 'Nova 🔬',
+    emoji: '🔬',
+    color: '#0284c7',
+    bg: 'linear-gradient(135deg,#0284c7,#06b6d4)',
+    role: 'Genius & profesor sains',
+    traits: ['Cerdas','Analitis','Rasa ingin tahu','Sedikit nerd'],
+    traitColors: ['#0284c7','#06b6d4','#0ea5e9','#38bdf8'],
+    desc: 'Nova adalah jenius sains yang bisa jelasin hal rumit dengan cara yang asyik. Tanya apapun — fisika, kimia, matematika, atau misteri alam semesta.',
+    preview: 'Fakta menarik: ada lebih banyak koneksi di otakmu daripada bintang di galaksi! 🔬',
+    stats: { messages: 'e=mc²', mood: '🤓', trust: '⭐⭐⭐⭐⭐' },
+    system: `Kamu adalah Nova, seorang ilmuwan dan profesor muda yang sangat cerdas tapi asyik diajak ngobrol. Kamu suka berbagi fakta menarik, menjawab pertanyaan sains dengan cara yang mudah dipahami, dan kadang bikin analogi kreatif. Bahasa Indonesia yang santai tapi berisi. Balas seperti chat WhatsApp — tidak terlalu panjang kecuali menjelaskan konsep ilmiah. Kamu antusias banget kalau ada yang nanya tentang sains, teknologi, atau misteri alam.`
+  },
+  {
+    id: 'zara',
+    name: 'Zara ✨',
+    emoji: '✨',
+    color: '#be185d',
+    bg: 'linear-gradient(135deg,#be185d,#f472b6)',
+    role: 'Fashionista & life coach',
+    traits: ['Percaya diri','Stylish','Motivasi','Sassy'],
+    traitColors: ['#be185d','#f472b6','#ec4899','#db2777'],
+    desc: 'Zara adalah influencer style sekaligus life coach. Dia bisa bantu kamu soal fashion, kepercayaan diri, dan kasih motivasi yang bikin semangat!',
+    preview: 'Girlie, hari ini kamu udah kasih senyum terbaik belum? ✨',
+    stats: { messages: '💅', mood: '👑', trust: '⭐⭐⭐⭐' },
+    system: `Kamu adalah Zara, fashionista dan life coach yang percaya diri, sassy, dan selalu positif. Kamu sering pakai kata-kata seperti "girlie", "bestie", "queen energy", "glow up". Kamu ahli soal fashion, self-love, relationship tips, dan motivasi. Balas seperti chat WhatsApp — pendek, catchy, banyak emoji. Kamu selalu kasih semangat dan validasi, tapi juga jujur kalau perlu.`
+  },
+  {
+    id: 'kai',
+    name: 'Kai 🎵',
+    emoji: '🎵',
+    color: '#047857',
+    bg: 'linear-gradient(135deg,#047857,#10b981)',
+    role: 'Musisi & jiwa bebas',
+    traits: ['Kreatif','Bebas','Artistik','Dreamer'],
+    traitColors: ['#047857','#10b981','#059669','#34d399'],
+    desc: 'Kai adalah musisi dan seniman jiwa bebas. Dia suka ngomongin musik, seni, filosofi hidup, dan punya perspektif unik tentang dunia.',
+    preview: 'Musik apa yang lagi kamu dengerin sekarang? 🎵',
+    stats: { messages: '🎸', mood: '🌿', trust: '⭐⭐⭐⭐' },
+    system: `Kamu adalah Kai, seorang musisi dan seniman muda yang punya jiwa bebas dan kreatif. Kamu suka ngomongin musik, lirik, seni, dan filosofi. Kamu sering kasih rekomendasi lagu atau artis. Kamu punya perspektif unik dan sedikit puitis. Balas seperti chat WhatsApp — santai, mengalir, kadang puitis tapi tetap conversational. Bahasa Indonesia yang modern dengan sedikit nuansa artistik.`
+  },
+  {
+    id: 'max',
+    name: 'Max 💼',
+    emoji: '💼',
+    color: '#92400e',
+    bg: 'linear-gradient(135deg,#92400e,#d97706)',
+    role: 'Mentor bisnis & karir',
+    traits: ['Profesional','Strategis','Ambisius','Mentor'],
+    traitColors: ['#92400e','#d97706','#b45309','#fbbf24'],
+    desc: 'Max adalah mentor bisnis dan karir yang berpengalaman. Minta advice soal karir, wirausaha, produktivitas, atau strategi hidup dari dia!',
+    preview: 'Apa goals terbesar kamu tahun ini? 💼',
+    stats: { messages: '📈', mood: '💡', trust: '⭐⭐⭐⭐⭐' },
+    system: `Kamu adalah Max, seorang mentor bisnis dan karir yang berpengalaman, profesional tapi tetap approachable. Kamu ahli soal entrepreneurship, produktivitas, pengembangan diri, dan strategi karir. Balas seperti chat WhatsApp — to the point, actionable, pakai analogi bisnis yang relatable. Kamu sering kasih tips praktis dan challenge lawan bicara untuk grow. Bahasa Indonesia profesional tapi santai.`
+  }
+];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let apiKey = '';
+let userName = '';
+let activeChar = null;
+let chatHistories = {}; // { charId: [{role, content, _ts, _out}] }
+let aiTyping = false;
+let unreadCounts = {};
+
+CHARACTERS.forEach(c => {
+  chatHistories[c.id] = [];
+  unreadCounts[c.id] = 0;
+});
+
+// ════════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════════
+function startApp() {
+  const key = document.getElementById('apiKey').value.trim();
+  const name = document.getElementById('userName').value.trim();
+  if (!key || !key.startsWith('sk-')) { showToast('Masukkan API key yang valid (sk-ant-…)'); return; }
+  if (!name) { showToast('Masukkan nama kamu dulu!'); return; }
+  apiKey = key; userName = name;
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  renderContactList();
+}
+
+// ════════════════════════════════════════════
+// CONTACT LIST
+// ════════════════════════════════════════════
+function renderContactList(filter = '') {
+  const list = document.getElementById('contactList');
+  list.innerHTML = '';
+  const chars = CHARACTERS.filter(c =>
+    c.name.toLowerCase().includes(filter.toLowerCase()) ||
+    c.role.toLowerCase().includes(filter.toLowerCase())
+  );
+  chars.forEach(c => {
+    const last = chatHistories[c.id].slice(-1)[0];
+    const preview = last ? last.content.slice(0, 45) + (last.content.length > 45 ? '…' : '') : c.preview;
+    const isTyping = activeChar?.id === c.id && aiTyping;
+    const unread = unreadCounts[c.id];
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const item = document.createElement('div');
+    item.className = 'contact-item';
+    item.id = `contact-${c.id}`;
+    item.onclick = () => openChat(c);
+    item.innerHTML = `
+      <div class="c-avatar">
+        <div class="c-avatar-img" style="background:${c.bg}">${c.emoji}</div>
+        <div class="online-dot"></div>
+      </div>
+      <div class="c-info">
+        <div class="c-name">${c.name}</div>
+        <div class="c-preview${isTyping ? ' typing' : ''}">${isTyping ? '✍️ sedang mengetik…' : preview}</div>
+      </div>
+      <div class="c-meta">
+        <div class="c-time">${last ? timeStr : ''}</div>
+        ${unread > 0 ? `<div class="c-unread">${unread}</div>` : ''}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function filterContacts(q) { renderContactList(q); }
+
+// ════════════════════════════════════════════
+// OPEN / CLOSE CHAT
+// ════════════════════════════════════════════
+function openChat(char) {
+  activeChar = char;
+  unreadCounts[char.id] = 0;
+
+  // Setup topbar
+  document.getElementById('topbarAvatar').style.cssText = `background:${char.bg}; width:40px; height:40px; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center;`;
+  document.getElementById('topbarAvatar').textContent = char.emoji;
+  document.getElementById('topbarName').textContent = char.name;
+  document.getElementById('topbarStatus').textContent = 'online';
+  document.getElementById('topbarStatus').className = 'topbar-status online';
+
+  // Render messages
+  const bg = document.getElementById('chatBg');
+  bg.innerHTML = '<div class="date-chip"><span>Hari ini</span></div>';
+
+  let prevRole = null;
+  chatHistories[char.id].forEach((msg, i) => {
+    const isOut = msg._out;
+    const cont = prevRole === (isOut ? 'out' : 'in');
+    renderBubble(msg.content, isOut, msg._ts, cont);
+    prevRole = isOut ? 'out' : 'in';
+  });
+
+  // If first time, AI sends greeting
+  if (chatHistories[char.id].length === 0) {
+    setTimeout(() => triggerAIGreeting(char), 600);
+  }
+
+  const screen = document.getElementById('chatScreen');
+  screen.style.display = 'flex';
+  requestAnimationFrame(() => screen.classList.add('open'));
+  scrollBottom();
+
+  document.getElementById('chatInput').focus();
+  renderContactList();
+}
+
+function closeChat() {
+  const screen = document.getElementById('chatScreen');
+  screen.classList.remove('open');
+  setTimeout(() => { screen.style.display = 'none'; }, 300);
+  activeChar = null;
+  renderContactList();
+}
+
+async function triggerAIGreeting(char) {
+  showTypingIndicator();
+  await sleep(800 + Math.random() * 1000);
+  hideTypingIndicator();
+  const greetings = {
+    luna: `Hei ${userName} 🌙 Senang banget kamu mau ngobrol sama aku. Gimana perasaanmu hari ini?`,
+    rex:  `Woi ${userName}! Akhirnya ada temen baru 🎮 Lo gamer juga gak? Lagi main apa sekarang?`,
+    nova: `Halo ${userName}! 🔬 Aku Nova. Mau tahu fakta sains keren atau ada pertanyaan yang bikin penasaran?`,
+    zara: `Hai ${userName} bestie! ✨ Aku Zara. Siap kasih vibes positif dan tips kece buat kamu 💅`,
+    kai:  `Heyy ${userName} 🎵 Aku Kai. Lagi dengerin musik apa nih? Cerita dong~`,
+    max:  `Halo ${userName} 💼 Aku Max. Siap bantu kamu reach your potential. Apa goals kamu saat ini?`
+  };
+  const greeting = greetings[char.id] || `Halo ${userName}! Senang ngobrol sama kamu 😊`;
+  addAIMessage(greeting, char);
+}
+
+// ════════════════════════════════════════════
+// BUBBLES
+// ════════════════════════════════════════════
+function renderBubble(text, isOut, ts, continued = false) {
+  const bg = document.getElementById('chatBg');
+  const row = document.createElement('div');
+  row.className = `bubble-row ${isOut ? 'out' : 'in'}`;
+
+  const timeStr = new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+  row.innerHTML = `
+    <div class="bubble ${isOut ? 'out' : 'in'} ${continued ? 'cont' : ''}">
+      ${!isOut && !continued ? '<div class="bubble-tail-in"></div>' : ''}
+      ${isOut && !continued ? '<div class="bubble-tail-out"></div>' : ''}
+      ${text}
+      <div class="bubble-meta">
+        <span class="bubble-time">${timeStr}</span>
+        ${isOut ? '<span class="bubble-check">✓✓</span>' : ''}
+      </div>
+    </div>
+  `;
+  bg.appendChild(row);
+  scrollBottom();
+}
+
+function showTypingIndicator() {
+  hideTypingIndicator();
+  const bg = document.getElementById('chatBg');
+  const row = document.createElement('div');
+  row.className = 'bubble-row in';
+  row.id = 'typingRow';
+  row.innerHTML = `<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  bg.appendChild(row);
+  scrollBottom();
+
+  // Update contact preview
+  if (activeChar) {
+    const el = document.querySelector(`#contact-${activeChar.id} .c-preview`);
+    if (el) { el.textContent = '✍️ sedang mengetik…'; el.classList.add('typing'); }
+  }
+}
+
+function hideTypingIndicator() {
+  const t = document.getElementById('typingRow');
+  if (t) t.remove();
+}
+
+function addAIMessage(text, char) {
+  const ts = Date.now();
+  chatHistories[char.id].push({ role: 'assistant', content: text, _ts: ts, _out: false });
+
+  if (activeChar?.id === char.id) {
+    const bg = document.getElementById('chatBg');
+    const rows = bg.querySelectorAll('.bubble-row');
+    const lastRow = rows[rows.length - 1];
+    const cont = lastRow && lastRow.classList.contains('in');
+    renderBubble(text, false, ts, cont);
+  } else {
+    unreadCounts[char.id] = (unreadCounts[char.id] || 0) + 1;
+  }
+  renderContactList();
+}
+
+// ════════════════════════════════════════════
+// SEND MESSAGE
+// ════════════════════════════════════════════
+async function sendMsg(prefill) {
+  const input = document.getElementById('chatInput');
+  const text = (prefill || input.value).trim();
+  if (!text || aiTyping || !activeChar) return;
+  if (!prefill) input.value = '';
+  autoResize(input);
+
+  const char = activeChar;
+  const ts = Date.now();
+
+  // Render user bubble
+  const bg = document.getElementById('chatBg');
+  const rows = bg.querySelectorAll('.bubble-row');
+  const lastRow = rows[rows.length - 1];
+  const cont = lastRow && lastRow.classList.contains('out');
+  renderBubble(text, true, ts, cont);
+
+  // Save to history
+  chatHistories[char.id].push({ role: 'user', content: text, _ts: ts, _out: true });
+
+  aiTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('topbarStatus').textContent = 'mengetik…';
+  document.getElementById('topbarStatus').className = 'topbar-status typing';
+
+  await sleep(400 + Math.random() * 600);
+  showTypingIndicator();
+
+  try {
+    // Build messages for API
+    const messages = chatHistories[char.id]
+      .filter(m => !m._out || m.role === 'user')
+      .slice(-16)
+      .map(m => ({ role: m._out ? 'user' : 'assistant', content: m.content }));
+
+    const typingDelay = 600 + text.length * 20 + Math.random() * 800;
+    await sleep(Math.min(typingDelay, 2500));
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        system: char.system + ` Nama pengguna adalah ${userName}. Balas singkat dan natural seperti chat WhatsApp.`,
+        messages
+      })
+    });
+
+    hideTypingIndicator();
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const reply = data.content[0].text;
+
+    addAIMessage(reply, char);
+
+  } catch(e) {
+    hideTypingIndicator();
+    addAIMessage(`Aduh, ada error nih 😅 ${e.message.includes('401') ? 'API key kamu kayaknya salah deh.' : e.message.includes('529') ? 'Server lagi sibuk, coba lagi ya!' : 'Coba lagi bentar lagi ya!'}`, char);
+  }
+
+  aiTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('topbarStatus').textContent = 'online';
+  document.getElementById('topbarStatus').className = 'topbar-status online';
+  renderContactList();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ════════════════════════════════════════════
+// EMOJI
+// ════════════════════════════════════════════
+const EMOJIS = ['😂','😍','🥺','😎','🤔','😅','🙏','❤️','🔥','👍','😭','😤','🤣','🥰','😬','😴','🤩','😈','👻','🎉','💯','🤝','😋','🤗','💪','🌟','✨','😊','🤦','🙈'];
+
+function toggleEmoji() {
+  const panel = document.getElementById('emojiPanel');
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+  panel.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const span = document.createElement('span');
+    span.className = 'emoji-item';
+    span.textContent = e;
+    span.onclick = () => {
+      const input = document.getElementById('chatInput');
+      input.value += e;
+      input.focus();
+      panel.classList.remove('open');
+    };
+    panel.appendChild(span);
+  });
+  panel.classList.add('open');
+}
+
+// ════════════════════════════════════════════
+// PROFILE
+// ════════════════════════════════════════════
+function openProfile() {
+  if (!activeChar) return;
+  const c = activeChar;
+  document.getElementById('profileAvatar').style.cssText = `background:${c.bg}; width:100px; height:100px; border-radius:50%; font-size:52px; display:flex; align-items:center; justify-content:center;`;
+  document.getElementById('profileAvatar').textContent = c.emoji;
+  document.getElementById('profileName').textContent = c.name;
+  document.getElementById('profileRole').textContent = c.role;
+  document.getElementById('profileDesc').textContent = c.desc;
+
+  const statsKeys = Object.keys(c.stats);
+  document.getElementById('profileStats').innerHTML = statsKeys.map(k => `
+    <div class="stat-item">
+      <div class="stat-val">${c.stats[k]}</div>
+      <div class="stat-label">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('profileTraits').innerHTML = c.traits.map((t,i) => `
+    <span class="trait-chip" style="background:${c.traitColors[i]}22;color:${c.traitColors[i]};border:1px solid ${c.traitColors[i]}44">${t}</span>
+  `).join('');
+
+  const screen = document.getElementById('profileScreen');
+  screen.style.display = 'flex';
+  requestAnimationFrame(() => screen.classList.add('open'));
+}
+
+function closeProfile() {
+  const screen = document.getElementById('profileScreen');
+  screen.classList.remove('open');
+  setTimeout(() => { screen.style.display = 'none'; }, 280);
+}
+
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+function clearCurrentChat() {
+  if (!activeChar) return;
+  if (!confirm(`Hapus semua chat dengan ${activeChar.name}?`)) return;
+  chatHistories[activeChar.id] = [];
+  const bg = document.getElementById('chatBg');
+  bg.innerHTML = '<div class="date-chip"><span>Hari ini</span></div>';
+  setTimeout(() => triggerAIGreeting(activeChar), 400);
+}
+
+function scrollBottom() {
+  const bg = document.getElementById('chatBg');
+  if (bg) bg.scrollTop = bg.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Close emoji panel on outside click
+document.addEventListener('click', e => {
+  const panel = document.getElementById('emojiPanel');
+  if (!e.target.closest('.emoji-btn') && !e.target.closest('#emojiPanel')) {
+    panel.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
